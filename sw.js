@@ -1,6 +1,6 @@
 const CACHE_NAME = 'v3_cache';
 const ASSETS = [
-  'o_clock1.4.html',
+  'o_clock.html',
   'manifest.json',
   'icon-192.png',
   'icon-512.png'
