@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v3_cache';
+const CACHE_NAME = 'v2.4_cache';
 const ASSETS = [
   'o_clock.html',
   'manifest.json',
