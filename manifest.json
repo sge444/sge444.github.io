@@ -1,7 +1,7 @@
 {
   "name": "Orienteering Watches",
   "short_name": "OrientWatches",
-  "start_url": "o_clock1.4.html",
+  "start_url": "o_clock.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
