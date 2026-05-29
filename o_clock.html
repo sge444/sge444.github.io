@@ -2,52 +2,238 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
   <title>O-Clock</title>
   <style>
-    body { font-family: Verdana, sans-serif; font-size: 13px; }
-    #clock { font-weight: 700; font-size: 50px; }
-    .btn-audio { padding: 5px 10px; cursor: pointer; }
+    /* Переменные для быстрой смены темы */
+    :root {
+      --bg-color: #121212;
+      --panel-bg: #1e1e1e;
+      --row-bg: #2a2a2a;
+      --text-color: #ffffff;
+      --text-muted: #aaaaaa;
+      --accent-color: #00ffaa;
+      --select-bg: #3a3a3a;
+      --select-border: #555555;
+    }
+
+    /* Стили для светлой темы */
+    [data-theme="light"] {
+      --bg-color: #f5f5f5;
+      --panel-bg: #ffffff;
+      --row-bg: #eaeaea;
+      --text-color: #000000;
+      --text-muted: #555555;
+      --accent-color: #0066cc;
+      --select-bg: #ffffff;
+      --select-border: #cccccc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 16px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    #form1 {
+      width: 100%;
+      max-width: 600px;
+      background: var(--panel-bg);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: background-color 0.3s;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--accent-color);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: color 0.3s;
+    }
+
+    /* Кнопка включения звука */
+    .btn-audio {
+      width: 100%;
+      padding: 22px;
+      font-size: 18px;
+      font-weight: bold;
+      background-color: #ffcc00;
+      color: #000000;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-audio:active { transform: scale(0.98); }
+
+    /* Блоки настроек */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--row-bg);
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    select {
+      background: var(--select-bg);
+      color: var(--text-color);
+      border: 1px solid var(--select-border);
+      padding: 10px 16px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+      transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    }
+
+    /* Переключатель (Switch) */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #777; transition: .3s; border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--accent-color); }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+    .info-row {
+      text-align: center;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+    #clock-original {
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    /* Контейнер главных часов */
+    .clock-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    /* Главное табло времени */
+    #clock {
+      font-weight: 700;
+      font-size: 16vw; /* Значение для режима AUTO по умолчанию */
+      color: var(--accent-color);
+      text-shadow: 0 0 25px rgba(0, 255, 170, 0.2);
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      transition: color 0.3s;
+      max-font-size: 300px;
+    }
   </style>
 </head>
 <body>
+
   <form id="form1" onsubmit="return false;">
-    <div style="font-size: 2em; color: #008080; margin-bottom: 10px;">Orienteering Watches</div>
-    <button type="button" id="audio-init" class="btn-audio">Включить звук (Click to Start Audio)</button>
-    <label style="display:none;" id="sound-label">
-      <input type="checkbox" name="soundon" checked> Sound ON
-    </label>
-    &nbsp;&nbsp;
-    Font:
-    <select name="font_size">
-      <option value="50">50</option><option value="100">100</option><option value="150">150</option>
-      <option value="200">200</option><option value="250">250</option><option value="300">300</option>
-    </select> px
-    &nbsp;&nbsp;
-    PreStart:
-    <select name="prestart">
-      <option value="0">0</option><option value="1">1</option>
-      <option value="2">2</option><option value="3">3</option>
-      <option value="4">4</option>
-    </select> minute(s)
-    &nbsp;&nbsp;
-    Start Time: <span id="clock-original">0:00:00</span>
+    <div class="title">Orienteering Watches</div>
+    
+    <button type="button" id="audio-init" class="btn-audio">Включить звук / Start Audio</button>
+    
+    <div class="setting-row" id="sound-row" style="display: none;">
+      <span>Звуковой сигнал</span>
+      <label class="switch">
+        <input type="checkbox" name="soundon" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Переключатель цветовой темы -->
+    <div class="setting-row">
+      <span>Цветовая тема</span>
+      <select name="theme_select" id="themeSelect">
+        <option value="dark" selected>Тёмная</option>
+        <option value="light">Светлая</option>
+      </select>
+    </div>
+
+    <!-- Настройка размера шрифта с режимом AUTO -->
+    <div class="setting-row">
+      <span>Размер шрифта</span>
+      <select name="font_size" id="fontSizeSelect">
+        <option value="auto" selected>Авто (Под экран)</option>
+        <option value="70">70 px</option>
+        <option value="100">100 px</option>
+        <option value="150">150 px</option>
+        <option value="200">200 px</option>
+        <option value="250">250 px</option>
+        <option value="300">300 px</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <span>PreStart (минуты)</span>
+      <select name="prestart">
+        <option value="0">0 мин</option>
+        <option value="1">1 мин</option>
+        <option value="2">2 мин</option>
+        <option value="3">3 мин</option>
+        <option value="4">4 мин</option>
+      </select>
+    </div>
+
+    <div class="info-row">
+      Текущее время: <span id="clock-original">0:00:00</span>
+    </div>
   </form>
 
-  <p><span id="clock">0:00:00</span></p>
+  <div class="clock-container">
+    <span id="clock">0:00:00</span>
+  </div>
 
   <script>
     const form = document.getElementById('form1');
     const clock = document.getElementById('clock');
     const clockOriginal = document.getElementById('clock-original');
     const audioBtn = document.getElementById('audio-init');
-    const soundLabel = document.getElementById('sound-label');
+    const soundRow = document.getElementById('sound-row');
+    const themeSelect = document.getElementById('themeSelect');
+    const fontSizeSelect = document.getElementById('fontSizeSelect');
     
     let audioCtx = null;
     let lastSecond = -1;
 
-    // Инициализация звука строго по нажатию кнопки
+    // Инициализация звука
     audioBtn.addEventListener('click', () => {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -56,7 +242,7 @@
         audioCtx.resume();
       }
       audioBtn.style.display = 'none';
-      soundLabel.style.display = 'inline';
+      soundRow.style.display = 'flex';
     });
 
     const beep = (freq = 440, duration = 0.12, volume = 0.2, type = 'sine') => {
@@ -83,7 +269,6 @@
       const m = now.getMinutes();
       const s = now.getSeconds();
 
-      // Срабатывает строго один раз в секунду
       if (s !== lastSecond) {
         lastSecond = s;
 
@@ -104,27 +289,45 @@
         clock.textContent = `${ph}:${pad(pm)}:${pad(s)}`;
       }
 
-      // Запускает проверку на каждый кадр анимации (работает автономно и плавно)
       requestAnimationFrame(updateClock);
     }
 
-    form.font_size.addEventListener('change', () => {
-      clock.style.fontSize = `${form.font_size.value}px`;
+    // Логика изменения размера (включая режим Авто)
+    function applyFontSize() {
+      const val = fontSizeSelect.value;
+      if (val === 'auto') {
+        clock.style.fontSize = '16vw'; // Резиновый размер на основе ширины окна
+        // Ограничиваем максимальный размер на больших мониторах ПК, чтобы не ломать верстку
+        if (window.innerWidth > 1400) {
+          clock.style.fontSize = '220px';
+        }
+      } else {
+        clock.style.fontSize = `${val}px`;
+      }
+    }
+
+    fontSizeSelect.addEventListener('change', applyFontSize);
+    window.addEventListener('resize', () => {
+      if (fontSizeSelect.value === 'auto') applyFontSize();
     });
 
-    // Запуск цикла часов
+    // Логика переключения тем
+    themeSelect.addEventListener('change', () => {
+      document.documentElement.setAttribute('data-theme', themeSelect.value);
+    });
+
+    // Инициализация при старте
+    applyFontSize();
     updateClock();
 	
-	
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js') // Без слэша в начале!
-        .then(reg => console.log('Service Worker успешно зарегистрирован!', reg))
-        .catch(err => console.log('Ошибка регистрации Service Worker:', err));
-    });
-  }
-	
-	
+    // Регистрация PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker успешно зарегистрирован!', reg))
+          .catch(err => console.log('Ошибка регистрации Service Worker:', err));
+      });
+    }
   </script>
 </body>
 </html>
