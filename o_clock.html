@@ -200,13 +200,13 @@
     </div>
 
     <!-- Переключатель цветовой темы -->
-    <div class="setting-row">
-      <span>Цветовая тема</span>
-      <select name="theme_select" id="themeSelect">
-        <option value="light" selected>Светлая</option>
-        <option value="dark">Тёмная</option>
-      </select>
-    </div>
+	<div class="setting-row">
+	  <span>Тёмная тема</span>
+	  <label class="switch">
+	    <input type="checkbox" id="themeToggle">
+	    <span class="slider"></span>
+	  </label>
+	</div>
 
     <!-- Настройка размера шрифта -->
     <div class="setting-row">
@@ -248,7 +248,7 @@
     const clockOriginal = document.getElementById('clock-original');
     const audioBtn = document.getElementById('audio-init');
     const soundRow = document.getElementById('sound-row');
-    const themeSelect = document.getElementById('themeSelect');
+    const themeToggle = document.getElementById('themeToggle');
     const fontSizeSelect = document.getElementById('fontSizeSelect');
     const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
     
@@ -343,9 +343,13 @@
     });
 
     // Логика переключения тем
-    themeSelect.addEventListener('change', () => {
-      document.documentElement.setAttribute('data-theme', themeSelect.value);
-    });
+    themeToggle.addEventListener('change', () => {
+	  if (themeToggle.checked) {
+	    document.body.setAttribute('data-theme', 'dark');
+	  } else {
+	    document.body.setAttribute('data-theme', 'light');
+	  }
+	});
 
     // Инициализация при старте
     applyFontSize();
