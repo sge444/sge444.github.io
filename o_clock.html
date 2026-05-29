@@ -7,20 +7,8 @@
   <link rel="manifest" href="manifest.json">
   <title>O-Clock</title>
   <style>
-    /* Переменные для быстрой смены темы */
+    /* Переменные для быстрой смены темы (Светлая по умолчанию) */
     :root {
-      --bg-color: #121212;
-      --panel-bg: #1e1e1e;
-      --row-bg: #2a2a2a;
-      --text-color: #ffffff;
-      --text-muted: #aaaaaa;
-      --accent-color: #00ffaa;
-      --select-bg: #3a3a3a;
-      --select-border: #555555;
-    }
-
-    /* Стили для светлой темы */
-    [data-theme="light"] {
       --bg-color: #f5f5f5;
       --panel-bg: #ffffff;
       --row-bg: #eaeaea;
@@ -29,6 +17,18 @@
       --accent-color: #0066cc;
       --select-bg: #ffffff;
       --select-border: #cccccc;
+    }
+
+    /* Стили для тёмной темы */
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --panel-bg: #1e1e1e;
+      --row-bg: #2a2a2a;
+      --text-color: #ffffff;
+      --text-muted: #aaaaaa;
+      --accent-color: #00ffaa;
+      --select-bg: #3a3a3a;
+      --select-border: #555555;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,8 +55,8 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      transition: background-color 0.3s;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      transition: background-color 0.3s, opacity 0.2s;
     }
 
     .title {
@@ -69,7 +69,7 @@
       transition: color 0.3s;
     }
 
-    /* Кнопка включения звука */
+    /* Крупная кнопка включения звука */
     .btn-audio {
       width: 100%;
       padding: 22px;
@@ -85,6 +85,24 @@
       -webkit-tap-highlight-color: transparent;
     }
     .btn-audio:active { transform: scale(0.98); }
+
+    /* Крупная кнопка скрытия/показа настроек */
+    .btn-toggle-settings {
+      width: 100%;
+      max-width: 600px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: bold;
+      background-color: var(--row-bg);
+      color: var(--text-color);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s, transform 0.1s;
+      margin-bottom: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-toggle-settings:active { transform: scale(0.98); }
 
     /* Блоки настроек */
     .setting-row {
@@ -121,7 +139,7 @@
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #777; transition: .3s; border-radius: 34px;
+      background-color: #888; transition: .3s; border-radius: 34px;
     }
     .slider:before {
       position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
@@ -153,17 +171,20 @@
     /* Главное табло времени */
     #clock {
       font-weight: 700;
-      font-size: 16vw; /* Значение для режима AUTO по умолчанию */
+      font-size: 16vw; /* Значение для режима AUTO */
       color: var(--accent-color);
-      text-shadow: 0 0 25px rgba(0, 255, 170, 0.2);
+      text-shadow: 0 0 25px rgba(0, 102, 204, 0.15);
       font-variant-numeric: tabular-nums;
       text-align: center;
-      transition: color 0.3s;
+      transition: color 0.3s, font-size 0.2s ease;
       max-font-size: 300px;
     }
   </style>
 </head>
-<body>
+<body data-theme="light"> <!-- Инициализация светлой темой по умолчанию -->
+
+  <!-- Кнопка скрыть/показать настройки на самом верху экрана -->
+  <button type="button" id="toggleSettingsBtn" class="btn-toggle-settings">Скрыть настройки ⚙️</button>
 
   <form id="form1" onsubmit="return false;">
     <div class="title">Orienteering Watches</div>
@@ -182,12 +203,12 @@
     <div class="setting-row">
       <span>Цветовая тема</span>
       <select name="theme_select" id="themeSelect">
-        <option value="dark" selected>Тёмная</option>
-        <option value="light">Светлая</option>
+        <option value="light" selected>Светлая</option>
+        <option value="dark">Тёмная</option>
       </select>
     </div>
 
-    <!-- Настройка размера шрифта с режимом AUTO -->
+    <!-- Настройка размера шрифта -->
     <div class="setting-row">
       <span>Размер шрифта</span>
       <select name="font_size" id="fontSizeSelect">
@@ -202,7 +223,7 @@
     </div>
 
     <div class="setting-row">
-      <span>PreStart (минуты)</span>
+      <span>PreStart (минут до старта)</span>
       <select name="prestart">
         <option value="0">0 мин</option>
         <option value="1">1 мин</option>
@@ -229,9 +250,21 @@
     const soundRow = document.getElementById('sound-row');
     const themeSelect = document.getElementById('themeSelect');
     const fontSizeSelect = document.getElementById('fontSizeSelect');
+    const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
     
     let audioCtx = null;
     let lastSecond = -1;
+
+    // Скрытие и показ настроек
+    toggleSettingsBtn.addEventListener('click', () => {
+      if (form.style.display === 'none') {
+        form.style.display = 'flex';
+        toggleSettingsBtn.textContent = 'Скрыть настройки ⚙️';
+      } else {
+        form.style.display = 'none';
+        toggleSettingsBtn.textContent = 'Показать настройки ⚙️';
+      }
+    });
 
     // Инициализация звука
     audioBtn.addEventListener('click', () => {
@@ -292,12 +325,10 @@
       requestAnimationFrame(updateClock);
     }
 
-    // Логика изменения размера (включая режим Авто)
     function applyFontSize() {
       const val = fontSizeSelect.value;
       if (val === 'auto') {
-        clock.style.fontSize = '16vw'; // Резиновый размер на основе ширины окна
-        // Ограничиваем максимальный размер на больших мониторах ПК, чтобы не ломать верстку
+        clock.style.fontSize = '16vw';
         if (window.innerWidth > 1400) {
           clock.style.fontSize = '220px';
         }
